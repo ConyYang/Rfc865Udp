@@ -1,7 +1,5 @@
 import java.io.*;
 import java.net.*;
-import java.net.InetAddress;
-
 import static java.net.InetAddress.getByName;
 
 public class Rfc865UdpClient {

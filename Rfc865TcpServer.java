@@ -1,39 +1,64 @@
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
+import java.net.*;
+import java.io.*;
 
 public class Rfc865TcpServer {
-    static Socket socket;
+    static ServerSocket parentSocket;
     public static void main(String[] argv) {
-        // 1. Establish TCP connection with server
+        // 1. Open TCP socket at well-known port
         try {
-            //Socket socket = new Socket(“127.0.0.1”, 5000)
-            //IP address of Server.   TCP Port.
-            socket = new Socket("127.0.0.1", 5000);
+            parentSocket = new ServerSocket(17);
+            System.out.println("Server started");
+            System.out.println("Waiting for a client ...");
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(-1);
         }
-        try {
-            // 2. Send TCP request to server
-            OutputStream os = socket.getOutputStream();
-            byte[] buf = "Yang Yubei, SEP1, 172.0.0.45".getBytes("UTF-8");
-            os.write(buf);
+        while (true) {
+            try {
+                // 2. Listen to establish TCP connection with clnt
+                Socket childSocket = parentSocket.accept();
+                // 3. Create new thread to handle client connection
+                ClientHandler client =
+                        new ClientHandler(childSocket);
+                Thread thread = new Thread(client);
+                thread.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    } }
 
-            // 3. Receive TCP reply from server
+class ClientHandler implements Runnable {
+    private Socket socket;
+
+    ClientHandler(Socket socket) {
+        this.socket = socket;
+    }
+
+    @Override
+    public void run() {
+        System.out.println("Client accepted");
+
+        // takes input from the client socket
+        try {
+            // 4. Receive TCP request from client
+            byte[] request = new byte[512];
             InputStream is = socket.getInputStream();
-            byte[] quoteBuf = new byte[512];
-            is.read(quoteBuf);
-            String quote = new String(quoteBuf);
-            System.out.println(quote);
+            System.out.println("Waiting for request...");
+            is.read(request);
+            String requestString = new String(request);
+            System.out.println(requestString);
+
+            // 5. Send TCP reply to client
+            OutputStream os = socket.getOutputStream();
+            byte[] quoteByte = "Yang Yubei".getBytes();
+            os.write(quoteByte);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-}
+
+
+        String line = "";
+
+    } }
